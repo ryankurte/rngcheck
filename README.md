@@ -4,4 +4,4 @@ Random number generator tests based on NIST 800-22 and Diehard / Dieharder, desi
 
 ## Status
 
-Work in progress, only a couple of tests have been implemented and these _may_ be incomplete.
+Work in progress, only a couple of tests have been implemented and these _may_ be incomplete. Use at your own risk.
