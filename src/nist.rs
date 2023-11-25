@@ -30,8 +30,8 @@ pub fn nist_freq_monobit(data: impl Iterator<Item = bool>) -> Result<f32, Error>
     // Compute P-value
     let p = libm::erfcf(s / libm::sqrtf(2.0));
 
-    // Check P value limit
-    if p < 0.01 {
+    // Check P value limit. The inverted logic ensures NaNs cause an error.
+    if !(p >= 0.01) {
         return Err(Error::BadPValue(p));
     }
 
@@ -86,8 +86,8 @@ pub fn nist_freq_block(
     // Compute p
     let p = 1.0 - nist_igamma(num_blocks as f32 / 2.0, x2 / 2.0);
 
-    // Check p value
-    if p < 0.01 {
+    // Check p value. The inverted logic ensures NaNs cause an error.
+    if !(p >= 0.01) {
         return Err(Error::BadPValue(p));
     }
 
