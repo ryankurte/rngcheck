@@ -47,6 +47,47 @@ impl<B: AsRef<[u8]>> Iterator for BitIter<B> {
     }
 }
 
+/// Helper for bit-wise iteration from an RNG
+///
+/// This pulls random data out of the RNG in chunks of 32 bits, and produces them one by one for
+/// testing.
+pub struct BitsFromRng<'a, R: rand_core_0_6::RngCore> {
+    rng: &'a mut R,
+    remaining: usize,
+    buffer: u32,
+    buffered: u8,
+}
+
+impl<'a, R: rand_core_0_6::RngCore> BitsFromRng<'a, R> {
+    pub fn new(rng: &'a mut R, items: usize) -> Self {
+        Self {
+            rng,
+            remaining: items,
+            buffer: 0,
+            buffered: 0,
+        }
+    }
+}
+impl<'a, R: rand_core_0_6::RngCore> Iterator for BitsFromRng<'a, R> {
+    type Item = bool;
+    fn next(&mut self) -> Option<bool> {
+        if self.remaining == 0 {
+            return None;
+        }
+
+        self.remaining -= 1;
+
+        if self.buffered == 0 {
+            self.buffer = self.rng.next_u32();
+            self.buffered = 32;
+        }
+        let result = self.buffer & 1 != 0;
+        self.buffer >>= 1;
+        self.buffered -= 1;
+        Some(result)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     extern crate alloc;
@@ -70,5 +111,11 @@ mod tests {
             let v: Vec<bool> = i.collect();
             assert_eq!(&v, bits);
         }
+    }
+
+    #[test]
+    fn from_rng() {
+        let bits: Vec<_> = BitsFromRng::new(&mut rand::rngs::OsRng, 123).collect();
+        assert_eq!(bits.len(), 123);
     }
 }
