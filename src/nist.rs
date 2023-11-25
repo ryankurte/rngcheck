@@ -94,27 +94,10 @@ pub fn nist_freq_block(
     Ok(p)
 }
 
-// {\displaystyle \gamma (s,x)} = EXP(GAMMALN(s))*GAMMA.DIST(x,s,1,TRUE).
-
-/// Incomplete gamma function (attempt, probably incomplete / incorrect)
-// TODO: find a better version / test suite to confirm the correct operation of this
+/// Incomplete gamma function
 fn nist_igamma(a: f32, x: f32) -> f32 {
-    let epsilon = 1e-8;
-
-    let mut sum = 1.0f32;
-    let mut term = 1.0f32;
-    let mut n = 0;
-    let max_iterations = 100;
-
-    while libm::fabsf(term) >= epsilon * libm::fabsf(sum) && n < max_iterations {
-        term *= x / (a + n as f32 + 1.0);
-        sum += term;
-        n += 1;
-    }
-
-    let gamma = sum * libm::powf(x, a) * libm::expf(-x) / libm::tgammaf(a + 1.0);
-
-    gamma
+    use special::Gamma;
+    x.inc_gamma(a)
 }
 
 #[cfg(test)]

@@ -10,6 +10,7 @@ license = "MIT"
 
 [dependencies]
 libm = "0.2.7"
+special = "0.10.2"
 
 [dev-dependencies]
 rand = { version = "0.8.5", features = [ "std", "std_rng" ] }
