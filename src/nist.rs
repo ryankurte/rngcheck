@@ -30,8 +30,8 @@ pub fn nist_freq_monobit(data: impl Iterator<Item = bool>) -> Result<f32, Error>
     // Compute P-value
     let p = libm::erfcf(s / libm::sqrtf(2.0));
 
-    // Check P value limit
-    if p < 0.01 {
+    // Check P value limit. The inverted logic ensures NaNs cause an error.
+    if !(p >= 0.01) {
         return Err(Error::BadPValue(p));
     }
 
@@ -86,35 +86,18 @@ pub fn nist_freq_block(
     // Compute p
     let p = 1.0 - nist_igamma(num_blocks as f32 / 2.0, x2 / 2.0);
 
-    // Check p value
-    if p < 0.01 {
+    // Check p value. The inverted logic ensures NaNs cause an error.
+    if !(p >= 0.01) {
         return Err(Error::BadPValue(p));
     }
 
     Ok(p)
 }
 
-// {\displaystyle \gamma (s,x)} = EXP(GAMMALN(s))*GAMMA.DIST(x,s,1,TRUE).
-
-/// Incomplete gamma function (attempt, probably incomplete / incorrect)
-// TODO: find a better version / test suite to confirm the correct operation of this
+/// Incomplete gamma function
 fn nist_igamma(a: f32, x: f32) -> f32 {
-    let epsilon = 1e-8;
-
-    let mut sum = 1.0f32;
-    let mut term = 1.0f32;
-    let mut n = 0;
-    let max_iterations = 100;
-
-    while libm::fabsf(term) >= epsilon * libm::fabsf(sum) && n < max_iterations {
-        term *= x / (a + n as f32 + 1.0);
-        sum += term;
-        n += 1;
-    }
-
-    let gamma = sum * libm::powf(x, a) * libm::expf(-x) / libm::tgammaf(a + 1.0);
-
-    gamma
+    use special::Gamma;
+    x.inc_gamma(a)
 }
 
 #[cfg(test)]
